@@ -12,6 +12,125 @@ const lessons = [
   { id: 4, category: "tecnologia", title: "Arte generativo: partículas y agentes", tag: "CÓDIGO CREATIVO · 8 MIN", desc: "Convierte reglas sencillas en movimiento, sistemas visuales y comportamientos emergentes.", completed: false, content: "<p><strong>Sistemas de partículas:</strong> imagina muchos elementos pequeños que tienen posición, velocidad y un ciclo de vida. Cada partícula puede moverse con ligeras variaciones, desaparecer y reaparecer; en conjunto, forman una composición en constante cambio.</p><p><strong>Agentes autónomos:</strong> son elementos que ajustan su movimiento según reglas locales, como buscar un objetivo, mantener distancia de otros o reaccionar al cursor. No necesitan una coreografía fija: sus interacciones pueden producir patrones inesperados.</p><p><strong>Prueba creativa:</strong> diseña una escena con puntos de colores. Haz que las partículas floten y que los agentes se separen suavemente cuando el cursor se acerque. Observa cómo unas pocas reglas transforman la experiencia visual.</p>", quiz: { q: "¿Qué diferencia mejor a un agente autónomo de una partícula sencilla?", opts: [{ t: "El agente ajusta su movimiento según objetivos e interacciones con el entorno", c: true }, { t: "La partícula siempre necesita un usuario que la mueva", c: false }, { t: "Un agente no puede reaccionar al cursor", c: false }] } }
 ];
 
+
+// Laboratorios de decisiones: cada alternativa abre una lectura distinta, sin puntuaciones.
+const scenarios = {
+  1: { context: "Tu grupo organiza una exposición sobre un problema del barrio. Solo tienen un minuto para presentar la propuesta.", question: "¿Cómo empezarías para conectar con quienes escuchan?", choices: [
+    ["Abrir con una pregunta cercana", "Una pregunta invita a imaginar el problema desde la experiencia propia. Después puedes explicar las evidencias y proponer una acción."],
+    ["Comenzar con una lista de cifras", "Los datos aportan rigor, pero sin contexto pueden resultar distantes. ¿Qué historia concreta ayudaría a interpretarlos?"],
+    ["Presentar la solución inmediatamente", "La propuesta es importante, aunque conocer antes el problema puede ayudar a entender por qué esa solución importa."]], reflection: "¿Cómo contarías esta historia sin hablar por las personas afectadas?" },
+  2: { context: "Preparas un cartel sobre descubrimientos científicos y encuentras que una investigadora apenas aparece mencionada en las fuentes.", question: "¿Qué harías antes de publicar el cartel?", choices: [
+    ["Buscar fuentes adicionales y revisar la atribución", "Contrastar fuentes ayuda a identificar contribuciones que pudieron quedar invisibilizadas y a reconocerlas con precisión."],
+    ["Mantener únicamente los nombres más conocidos", "Una selección basada en fama puede repetir omisiones históricas. ¿Quién decide qué aportaciones se recuerdan?"],
+    ["Atribuirle todos los hallazgos sin verificar", "Visibilizar también exige rigor. Reconocer una contribución implica revisar pruebas y contexto, no sustituir una atribución imprecisa por otra."]], reflection: "¿Qué voces o aportaciones faltan en los materiales que consultas habitualmente?" },
+  3: { context: "Una encuesta sobre acceso a talleres creativos incluye respuestas de 20 estudiantes, pero solo se aplicó en un salón.", question: "¿Qué conclusión compartirías con tu comunidad?", choices: [
+    ["Explicar el tamaño y los límites de la muestra", "Reconocer a quiénes se consultó permite interpretar los resultados sin generalizarlos a toda la comunidad."],
+    ["Afirmar que representa a toda la escuela", "Una muestra de un solo salón puede dejar fuera experiencias distintas. Sería útil ampliar la consulta."],
+    ["Descartar los resultados por completo", "La información puede servir como punto de partida si se comunica su alcance y se investiga qué voces faltan."]], reflection: "¿A quiénes invitarías a responder para escuchar perspectivas que faltan?" },
+  4: { context: "Diseñas una instalación digital con puntos en movimiento. Quieres que responda a quienes se acercan, sin controlar cada punto manualmente.", question: "¿Qué regla probarías en tu sistema visual?", choices: [
+    ["Hacer que los agentes se aparten del cursor", "Los agentes cambian su dirección según una interacción local. Prueba el laboratorio visual y acerca el cursor a las figuras."],
+    ["Mover todos los puntos en una trayectoria idéntica", "Una coreografía fija produce orden, pero limita la aparición de comportamientos autónomos. ¿Qué ocurriría si cada punto tuviera reglas propias?"],
+    ["Variar únicamente el color de fondo", "El color cambia la atmósfera de la obra; para explorar agentes autónomos también puedes introducir decisiones de movimiento."]], reflection: "¿Qué sensación produce tu composición al reaccionar a las personas?" }
+};
+
+function renderScenario(id) {
+  const data = scenarios[id];
+  const host = document.getElementById("scenario-content");
+  host.replaceChildren();
+  const intro = document.createElement("p"); intro.className = "scenario-context"; intro.textContent = data.context;
+  const question = document.createElement("h4"); question.textContent = data.question;
+  const options = document.createElement("div"); options.className = "scenario-options";
+  const outcome = document.createElement("div"); outcome.className = "scenario-outcome"; outcome.setAttribute("aria-live", "polite");
+  data.choices.forEach(([label, explanation], index) => {
+    const btn = document.createElement("button"); btn.type = "button"; btn.className = "scenario-choice";
+    const shape = document.createElement("span"); shape.className = "choice-shape choice-shape-" + index; shape.setAttribute("aria-hidden", "true");
+    const txt = document.createElement("span"); txt.textContent = label; btn.append(shape, txt);
+    btn.addEventListener("click", () => {
+      options.querySelectorAll("button").forEach(b => { b.classList.remove("selected"); b.setAttribute("aria-pressed", "false"); });
+      btn.classList.add("selected"); btn.setAttribute("aria-pressed", "true");
+      outcome.replaceChildren();
+      const heading = document.createElement("strong"); heading.textContent = "Una perspectiva para explorar";
+      const p = document.createElement("p"); p.textContent = explanation;
+      outcome.append(heading, p); outcome.classList.add("visible");
+    });
+    btn.setAttribute("aria-pressed", "false"); options.append(btn);
+  });
+  host.append(intro, question, options, outcome);
+  const reflection = document.getElementById("reflection-question"); reflection.textContent = data.reflection;
+  const field = document.getElementById("reflection-input"); field.value = getReflection(id);
+  field.oninput = () => saveReflection(id, field.value);
+  const stage = document.getElementById("generative-lab"); stage.classList.toggle("hidden", id !== 4);
+  if (id === 4) setupGenerativeLab();
+}
+function getReflection(id) {
+  try { return JSON.parse(localStorage.getItem("synapse-reflections-v1") || "{}")[id] || ""; }
+  catch (_) { return ""; }
+}
+function saveReflection(id, value) {
+  try { const all = JSON.parse(localStorage.getItem("synapse-reflections-v1") || "{}"); all[id] = value.slice(0, 1500); localStorage.setItem("synapse-reflections-v1", JSON.stringify(all)); }
+  catch (error) { console.warn("No se pudo guardar la reflexión.", error); }
+}
+let labAnimation = null;
+function setupGenerativeLab() {
+  const canvas = document.getElementById("generative-canvas");
+  if (!canvas) return;
+  if (canvas._resumeLab) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  const width = canvas.width, height = canvas.height;
+  const agents = Array.from({length: 30}, (_, i) => ({
+    x: 15 + Math.random() * (width - 30), y: 15 + Math.random() * (height - 30),
+    vx: (Math.random() - .5) * 1.6, vy: (Math.random() - .5) * 1.6,
+    size: 3 + i % 4
+  }));
+  let pointer = null;
+  const locate = event => {
+    const r = canvas.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    pointer = {x: (event.clientX - r.left) * width / r.width,
+               y: (event.clientY - r.top) * height / r.height};
+  };
+  canvas.addEventListener("pointermove", locate);
+  canvas.addEventListener("pointerdown", event => {locate(event); canvas.setPointerCapture?.(event.pointerId);});
+  canvas.addEventListener("pointerup", () => pointer = null);
+  canvas.addEventListener("pointercancel", () => pointer = null);
+  canvas.addEventListener("pointerleave", () => pointer = null);
+  function frame() {
+    labAnimation = null;
+    const modal = document.getElementById("lesson-modal");
+    if (!canvas.isConnected || modal.classList.contains("hidden")) return;
+    ctx.fillStyle = "#17182a"; ctx.fillRect(0, 0, width, height);
+    // Cuadrícula geométrica Bauhaus, discreta detrás de los agentes.
+    ctx.strokeStyle = "rgba(255,255,255,.07)"; ctx.lineWidth = 1;
+    for (let x=0; x<width; x+=26) {ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,height);ctx.stroke();}
+    for (let y=0; y<height; y+=26) {ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(width,y);ctx.stroke();}
+    agents.forEach((a,i) => {
+      if (pointer) {
+        const dx=a.x-pointer.x, dy=a.y-pointer.y, distance=Math.hypot(dx,dy);
+        if (distance < 125 && distance > .01) {
+          const strength = (1-distance/125)*1.5;
+          a.vx += dx/distance*strength; a.vy += dy/distance*strength;
+        }
+      }
+      a.vx += (Math.random()-.5)*.055; a.vy += (Math.random()-.5)*.055;
+      a.vx *= .985; a.vy *= .985;
+      const speed=Math.hypot(a.vx,a.vy);
+      if (speed>3.5) {a.vx=a.vx/speed*3.5;a.vy=a.vy/speed*3.5;}
+      a.x += a.vx; a.y += a.vy;
+      if(a.x<8 || a.x>width-8) a.vx *= -1;
+      if(a.y<8 || a.y>height-8) a.vy *= -1;
+      a.x=Math.max(8,Math.min(width-8,a.x)); a.y=Math.max(8,Math.min(height-8,a.y));
+      ctx.fillStyle=["#f25c54","#53c6d5","#f3d54a","#a99bf4"][i%4];
+      if(i%3===0) ctx.fillRect(a.x-a.size,a.y-a.size,a.size*2,a.size*2);
+      else if(i%3===1) {ctx.beginPath();ctx.arc(a.x,a.y,a.size,0,Math.PI*2);ctx.fill();}
+      else {ctx.beginPath();ctx.moveTo(a.x,a.y-a.size*1.5);ctx.lineTo(a.x+a.size*1.3,a.y+a.size);ctx.lineTo(a.x-a.size*1.3,a.y+a.size);ctx.closePath();ctx.fill();}
+    });
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && !appState.motionPaused)
+      labAnimation = requestAnimationFrame(frame);
+  }
+  canvas._resumeLab = () => {if (labAnimation === null) frame();};
+}
+
 const schools = [
   { tag: "TECNOLOGÍA + ARTE", title: "Instituto de Artes Digitales", desc: "Ejemplo de programa técnico en diseño de interacción y animación.", details: ["Modalidad: híbrida", "Duración: 2 años"], url: "" },
   { tag: "INGENIERÍA", title: "Universidad Politécnica STEAM", desc: "Ejemplo de ruta educativa con enfoque interdisciplinario y laboratorios.", details: ["Modalidad: presencial", "Duración: 4 años"], url: "" }
@@ -209,9 +328,14 @@ function openModal(id) {
     button.addEventListener("click", () => checkQuiz(button, option.c));
     options.append(button);
   });
+  renderScenario(id);
   document.getElementById("modal-checkbox").checked = lesson.completed;
   document.getElementById("lesson-modal").classList.remove("hidden");
   document.body.classList.add("modal-open");
+  if (id === 4) {
+    const canvas = document.getElementById("generative-canvas");
+    if (canvas && canvas._resumeLab) canvas._resumeLab();
+  }
   document.querySelector(".close-modal").focus();
 }
 function checkQuiz(button, isCorrect) {
@@ -222,6 +346,7 @@ function checkQuiz(button, isCorrect) {
   feedback.className = "quiz-feedback " + (isCorrect ? "success" : "error");
 }
 function closeLessonModal() {
+  if (labAnimation) { cancelAnimationFrame(labAnimation); labAnimation = null; }
   document.getElementById("lesson-modal").classList.add("hidden");
   document.body.classList.remove("modal-open");
   if (lastFocusedElement && typeof lastFocusedElement.focus === "function") lastFocusedElement.focus();

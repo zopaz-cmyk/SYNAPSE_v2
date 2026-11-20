@@ -15,7 +15,7 @@
   <div class="app-shell">
     <header class="topbar">
       <a class="brand" href="#" aria-label="Synapse, inicio" onclick="showView('retos'); return false;">
-        <span class="brand-mark" aria-hidden="true">s</span>
+        <span class="brand-mark" aria-hidden="true"><span class="brand-letter">s</span></span>
         <span><strong>synapse</strong><small>PLATAFORMA VOCACIONAL STEAM</small></span>
       </a>
       <div class="topbar-right">
@@ -188,6 +188,19 @@
       <h2 id="modal-title"></h2>
       <div id="modal-content" class="modal-content"></div>
       <div class="exercise-box"><span class="eyebrow">COMPRUEBA LO QUE APRENDISTE</span><h3>Una pregunta para ti</h3><p id="quiz-question"></p><div id="quiz-options" class="quiz-options"></div><div id="quiz-feedback" class="quiz-feedback" aria-live="polite"></div></div>
+      <section class="scenario-panel" aria-labelledby="scenario-title">
+        <div class="scenario-header"><span class="scenario-number">03 / EXPERIMENTAR</span><span class="scenario-deco" aria-hidden="true">● ■ ▲</span></div>
+        <h3 id="scenario-title">Laboratorio de decisiones</h3>
+        <p class="scenario-hint">Elige una posibilidad para descubrir sus implicaciones. Puedes cambiar de opinión: aquí no hay puntos ni castigos.</p>
+        <div id="scenario-content"></div>
+        <div id="generative-lab" class="generative-lab hidden"><p>Acerca el cursor o toca el espacio: los agentes reaccionan a tu presencia.</p><canvas id="generative-canvas" width="520" height="190" aria-label="Composición interactiva de agentes de colores que se apartan del cursor"></canvas></div>
+      </section>
+      <section class="reflection-panel" aria-labelledby="reflection-title">
+        <span class="scenario-number">04 / REFLEXIONAR</span><h3 id="reflection-title">Tu propia perspectiva</h3>
+        <p id="reflection-question"></p><label for="reflection-input" class="reflection-label">Escribe una idea, pregunta o conclusión (opcional)</label>
+        <textarea id="reflection-input" rows="3" maxlength="1500" placeholder="No hay respuestas perfectas. Este espacio es tuyo."></textarea>
+        <small>Tu reflexión se guarda únicamente en este navegador.</small>
+      </section>
       <div class="modal-bottom"><label class="completion-label"><input type="checkbox" id="modal-checkbox" onchange="toggleModalCompletion(this.checked)"> Marcar como finalizada</label><button class="btn btn-dark" type="button" onclick="closeLessonModal()">Guardar y cerrar ↗</button></div>
     </div>
   </div>
